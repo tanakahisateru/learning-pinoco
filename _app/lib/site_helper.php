@@ -13,3 +13,20 @@ function detect_ie_version() {
     return $ie;
 }
 
+// current page marking
+function nav_curr_mark_for($navid) {
+    $currmark = 'curr';
+    $p = Pinoco::instance()->path;
+    switch($navid) {
+    case 1:
+        return $p == '/' || $p == '/index.html' ? $currmark : '';
+    case 2:
+        return $p == '/some.html' ? $currmark : '';
+    case 3:
+        return $p == '/navigation.html' ? $currmark : '';
+    case 4:
+        return $p == '/links.html' ? $currmark : '';
+    default:
+        return '';
+    }
+}
