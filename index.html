@@ -5,7 +5,9 @@
 ">
 <head>
 <!--! begin hint css for local preview -->
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/boilerplate.css" />
+<link rel="stylesheet" href="css/style.css?v=2" />
+<link rel="stylesheet" href="css/boilerplate2.css" />
 <style>
 article, aside {
     border: solid 1px gray;
@@ -15,7 +17,9 @@ aside {
 }
 </style>
 <!--! end hint css for local preview -->
-<tal:block metal:fill-slot="head"></tal:block>
+<tal:block metal:fill-slot="head">
+<!--! TODO: write local style here. -->
+</tal:block>
 </head>
 <body>
     <div id="main" class="wrapper">
