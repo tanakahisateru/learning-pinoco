@@ -37,6 +37,7 @@
         </header>
     </div>
     <div id="main" class="wrapper clearfix">
+        <aside metal:define-slot="main-aside" tal:condition="not:exists:no_aside">
             <h3>Something aside</h3>
         </aside>
         <article metal:define-slot="main-article">
