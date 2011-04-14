@@ -10,7 +10,15 @@
 <body>
     <div id="main" class="wrapper">
         <article metal:fill-slot="main-article">
-            <p>links</p>
+            <h3>Thanks to:</h3>
+            <ul>
+                <li tal:repeat="item this/links"><a href="#"
+                    tal:attributes="href item"
+                    tal:content="repeat/item/key"
+                >link</a></li>
+                <li tal:replace=""><a href="#">link</a></li>
+                <li tal:replace=""><a href="#">link</a></li>
+            </ul>
         </article>
     </div>
 </body>
