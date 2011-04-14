@@ -4,13 +4,21 @@
     short_title 'Pinoco!'
 ">
 <head>
+<!--! begin hint css for local preview -->
+<link rel="stylesheet" href="css/style.css" />
+<style>
+article, aside {
+    border: solid 1px gray;
+}
+aside {
+    float: none;
+}
+</style>
+<!--! end hint css for local preview -->
 <tal:block metal:fill-slot="head"></tal:block>
 </head>
 <body>
     <div id="main" class="wrapper">
-        <aside metal:fill-slot="main-aside">
-            <h3>Hey!</h3>
-        </aside>
         <article metal:fill-slot="main-article">
             <header>
                 <h2>Header</h2>
@@ -25,6 +33,9 @@
                 <p>You the auther of this page.</p>
             </footer>
         </article>
+        <aside metal:fill-slot="main-aside">
+            <h3>Hey!</h3>
+        </aside>
     </div>
     <tal:block metal:fill-slot="trailing">
         <script src="js/script.js"></script>
