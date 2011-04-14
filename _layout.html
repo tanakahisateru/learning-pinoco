@@ -58,7 +58,7 @@
         </footer>
     </div>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
-    <script>!window.jQuery && document.write(unescape('%3Cscript src="${url:/js/libs/jquery-1.5.1.min.js}"%3E%3C/script%3E'))</script>
+    <script>!window.jQuery ${structure '&&'} document.write(unescape('%3Cscript src="${url:/js/libs/jquery-1.5.1.min.js}"%3E%3C/script%3E'))</script>
     <tal:block metal:define-slot="trailing">
         <script src="js/script.js" tal:attributes="src url:/js/script.js"></script>
     </tal:block>
