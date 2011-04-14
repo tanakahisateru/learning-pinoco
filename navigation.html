@@ -1,0 +1,17 @@
+<!doctype html>
+<html metal:use-macro="_layout.html/html" tal:define="
+    title 'navigation'
+">
+<head>
+<tal:block metal:fill-slot="head">
+<!--! TODO: write local style here. -->
+</tal:block>
+</head>
+<body>
+    <div id="main" class="wrapper">
+        <article metal:fill-slot="main-article">
+            <p>navigation</p>
+        </article>
+    </div>
+</body>
+</html>

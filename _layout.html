@@ -28,15 +28,15 @@
             <h1 id="title" tal:content="short_title|title|default">Pioco HTML5</h1>
             <nav>
                 <ul>
-                    <li><a href="#" tal:attributes="href url:/some.html">Some</a></li>
-                    <li><a href="#" tal:attributes="href url:/navigation.html">navigation</a></li>
-                    <li><a href="#" tal:attributes="href url:/links.html">links</a></li>
+                    <li><a href="index.html" tal:attributes="href url:/">HOME</a></li>
+                    <li><a href="some.html" tal:attributes="href url:/some.html">Some</a></li>
+                    <li><a href="navigation.html" tal:attributes="href url:/navigation.html">navigation</a></li>
+                    <li><a href="links.html" tal:attributes="href url:/links.html">links</a></li>
                 </ul>
             </nav>
         </header>
     </div>
-    <div id="main" class="wrapper">
-        <aside metal:define-slot="main-aside">
+    <div id="main" class="wrapper clearfix">
             <h3>Something aside</h3>
         </aside>
         <article metal:define-slot="main-article">
