@@ -17,6 +17,7 @@ body{
 
 #header-container{
     background-color:#f16529;
+    min-width:960px;
     height:130px;
     border-bottom:20px solid #e44d26;
     margin-bottom:50px;
@@ -103,6 +104,7 @@ article header{
 
 #footer-container{
     background-color:#f16529;
+    min-width:960px;
     height:240px;
     border-top:20px solid #e44d26;
     margin-top:50px;
