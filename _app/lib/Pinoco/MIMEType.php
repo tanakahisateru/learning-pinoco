@@ -9,8 +9,8 @@
  * @package  Pinoco
  * @author   Hisateru Tanaka <tanakahisateru@gmail.com>
  * @license  http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License
- * @version  0.3.0
- * @link     http://code.google.com/p/pinoco/
+ * @version  0.4.0
+ * @link     https://github.com/tanakahisateru/pinoco
  * @filesource
  */
 
@@ -229,6 +229,11 @@ class Pinoco_MIMEType {
     public static function fromFileName($filename)
     {
         $ext = pathinfo($filename, PATHINFO_EXTENSION);
-        return $ext ? self::$EXT2TYPE[$ext] : "";
+        if($ext && isset(self::$EXT2TYPE[$ext])) {
+            return self::$EXT2TYPE[$ext];
+        }
+        else {
+            return 'application/octet-stream';
+        }
     }
 }
