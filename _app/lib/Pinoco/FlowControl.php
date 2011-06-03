@@ -9,14 +9,15 @@
  * @package  Pinoco
  * @author   Hisateru Tanaka <tanakahisateru@gmail.com>
  * @license  http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License
- * @version  0.3.0
- * @link     http://code.google.com/p/pinoco/
+ * @version  0.4.0
+ * @link     https://github.com/tanakahisateru/pinoco
  * @filesource
  */
 
 /**
  * Flow control object
  * @package Pinoco
+ * @internal
  */
 class Pinoco_FlowControl extends Exception {
 }
@@ -24,6 +25,7 @@ class Pinoco_FlowControl extends Exception {
 /**
  * Flow control object
  * @package Pinoco
+ * @internal
  */
 class Pinoco_FlowControlSkip extends Pinoco_FlowControl {
 }
@@ -31,6 +33,7 @@ class Pinoco_FlowControlSkip extends Pinoco_FlowControl {
 /**
  * Flow control object
  * @package Pinoco
+ * @internal
  */
 class Pinoco_FlowControlTerminate extends Pinoco_FlowControl {
 }
@@ -38,6 +41,7 @@ class Pinoco_FlowControlTerminate extends Pinoco_FlowControl {
 /**
  * Flow control object
  * @package Pinoco
+ * @internal
  */
 class Pinoco_FlowControlHttpError extends Pinoco_FlowControl {
     
@@ -57,7 +61,7 @@ class Pinoco_FlowControlHttpError extends Pinoco_FlowControl {
     }
     
     private function _code2message($code, $field) {
-        $ise = "The server encountered an internal error or misconfigurationand was unable to complete your request.";
+        $ise = "The server encountered an internal error or misconfiguration and was unable to complete your request.";
         if(!$this->_status_messages) {
             $this->_status_messages = array(
                 100 => array('title'=>'Continue', 'message'=>$ise),
@@ -137,7 +141,9 @@ class Pinoco_FlowControlHttpError extends Pinoco_FlowControl {
      */
     public function respond($pinoco)
     {
-        header("HTTP/1.0 " . $this->code . " " . $this->title);
+        if(!headers_sent()) {
+            header("HTTP/1.0 " . $this->code . " " . $this->title);
+        }
         
         $pref = $pinoco->sysdir . "/error/";
         foreach(array($this->code . '.php', 'default.php') as $errfile) {
@@ -147,7 +153,9 @@ class Pinoco_FlowControlHttpError extends Pinoco_FlowControl {
             }
         }
         
-        header("Content-Type: text/html; charset=iso-8859-1");
+        if(!headers_sent()) {
+            header("Content-Type: text/html; charset=iso-8859-1");
+        }
         echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">' . "\n";
         echo "<html><head>\n";
         echo "<title>" . $this->code . " " . $this->title . "</title>\n";
@@ -161,6 +169,7 @@ class Pinoco_FlowControlHttpError extends Pinoco_FlowControl {
 /**
  * Flow control object
  * @package Pinoco
+ * @internal
  */
 class Pinoco_FlowControlHttpRedirect extends Pinoco_FlowControlHttpError {
     /**
