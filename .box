@@ -1,4 +1,0 @@
-url_rewrites:
-  - ^(.*/)$ _gateway.php/$1
-  - ^(.*\.html)$ _gateway.php/$1
-
