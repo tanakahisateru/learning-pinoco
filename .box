@@ -3,10 +3,15 @@
 ################################################
 shared_writable_dirs:
     - /tmp
+
 url_rewrites:
     - ^(.*/)$        _gateway.php?PATH_INFO=/$1
     - ^(.*\.html)$   _gateway.php?PATH_INFO=/$1
     # how can i detect file existence?
+
+permissions:
+    /_app :
+        - all: deny
 
 ################################################
 ## WEB SPECIFIC SETTINGS
@@ -16,7 +21,7 @@ index_list: [index.html, index.php]
 default_gateway: _gateway.php
 error_pages: []
 #    404: /404.html
- 
+
 ################################################
 ## PHP SPECIFIC SETTINGS
 ################################################
