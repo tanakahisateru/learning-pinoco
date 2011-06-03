@@ -9,8 +9,8 @@
  * @package  Pinoco
  * @author   Hisateru Tanaka <tanakahisateru@gmail.com>
  * @license  http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License
- * @version  0.4.0
- * @link     https://github.com/tanakahisateru/pinoco
+ * @version  0.3.0
+ * @link     http://code.google.com/p/pinoco/
  * @filesource
  */
 
@@ -47,25 +47,25 @@ require_once dirname(__FILE__) . '/Pinoco/FlowControl.php';
  * </code>
  * 
  * @package Pinoco
- * @property-read string $baseuri Base URI
- * @property-read string $basedir Base directory
- * @property-read string $sysdir  Application directory
- * @property Pinoco_List $incdir  Include pathes
- * @property-read string $path    Path under base URI
- * @property-read string $script  Current hook script
- * @property-read Pinoco_List $activity  Activity history of hook scripts
- * @property-read string $subpath Sub path under current hook script
- * @property-read Pinoco_List $pathargs Path elements matches _default[.*] hooks
- * @property string $directory_index Space separated directory index files(like Apache)
- * @property string $page         Template file to be rendered
- * @property-read Pinoco_Vars $renderers File extension to rendering module mappings
- * @property-read Pinoco_Vars $autolocal Auto extraced variables into local scope
- * @property callback $url_modifier  URL modification callback
- * @property callback $page_modifier Template page base path modification callback
+ * @property-read string $baseuri
+ * @property-read string $basedir
+ * @property-read string $sysdir
+ * @property Pinoco_List $incdir
+ * @property-read string $path
+ * @property-read string $script
+ * @property-read Pinoco_List $activity
+ * @property-read string $subpath
+ * @property-read Pinoco_List $pathargs
+ * @property string $directory_index
+ * @property string $page
+ * @property-read Pinoco_Vars $renderers
+ * @property-read Pinoco_Vars $autolocal
+ * @property callback $url_modifier
+ * @property callback $page_modifier
  */
 class Pinoco extends Pinoco_DynamicVars {
     
-    const VERSION = "0.4.0";
+    const VERSION = "0.3.0";
     
     private $_baseuri;   // R gateway index.php location on internet
     private $_basedir;   // R gateway index.php location on file system
@@ -289,7 +289,7 @@ class Pinoco extends Pinoco_DynamicVars {
      * @param mixed $args,...
      * @return object
      */
-    public static function newObj($class /*[, $args[, ...]]*/)
+    public static function newObj($class)
     {
         $seppos = strrpos($class, '/');
         if($seppos !== FALSE) {
@@ -317,20 +317,6 @@ class Pinoco extends Pinoco_DynamicVars {
             }
             return null;
         }
-    }
-    
-    /**
-     * Wrapped PDO factory
-     * @param string $dsn
-     * @param string $un
-     * @param string $pw
-     * @param array $opts
-     * @return Pinoco_PDOWrapper
-     */
-    public static function newPDOWrapper($dsn, $un="", $pw="", $opts=array())
-    {
-        require_once dirname(__FILE__) . '/Pinoco/PDOWrapper.php';
-        return new Pinoco_PDOWrapper($dsn, $un, $pw, $opts);
     }
     
     /**
@@ -789,6 +775,7 @@ class Pinoco extends Pinoco_DynamicVars {
     // runtime core
     /**
      * Writes Pinoco credit into HTTP header.
+     * @internal
      * @return void
      */
     private function _credit_into_x_powerd_by()
@@ -860,124 +847,12 @@ class Pinoco extends Pinoco_DynamicVars {
         
         ini_set('include_path', implode($sep, $runinc));
     }
-    
-    /**
-     * @param string $errno
-     * @param string $errstr
-     * @param string $errfile
-     * @param string $errline
-     * @return void
-     * @ignore
-     */
-    public function _error_handler($errno, $errstr, $errfile, $errline)
-    {
-        if(function_exists('xdebug_is_enabled') && xdebug_is_enabled()) {
-            return FALSE;
-        }
-        if((error_reporting() & $errno) == 0) {
-            return FALSE;
-        }
-        
-        $errno2txt = array(
-            E_NOTICE=>"Notice", E_USER_NOTICE=>"Notice",
-            E_WARNING=>"Warning", E_USER_WARNING=>"Warning",
-            E_ERROR=>"Fatal Error", E_USER_ERROR=>"Fatal Error"
-        );
-        $errors = isset($errno2txt[$errno]) ? $errno2txt[$errno] : "Unknown";
-        
-        $trace = debug_backtrace();
-        array_shift($trace);
-        $stacktrace = array();
-        for($i=0; $i < count($trace); $i++) {
-            $stacktrace[] = htmlspecialchars(sprintf("#%d %s%s%s called at [%s:%d]",
-                $i,
-                @$trace[$i]['class'],
-                @$trace[$i]['type'],
-                @$trace[$i]['function'],
-                @$trace[$i]['file'],
-                @$trace[$i]['line']
-            ));
-        }
-        
-        ob_start();
-        if (ini_get("display_errors")) {
-            printf("<br />\n<b>%s</b>: %s in <b>%s</b> on line <b>%d</b><br />\n", $errors, $errstr, $errfile, $errline);
-            echo "Stack trace:<br />\n" . implode("<br />\n", $stacktrace) . "<br /><br />\n";
-        }
-        if (ini_get('log_errors')) {
-            error_log(sprintf("PHP %s:  %s in %s on line %d", $errors, $errstr, $errfile, $errline));
-        }
-        if($errno & (E_ERROR | E_USER_ERROR)) {
-            if (!headers_sent()) {
-                header('HTTP/1.0 500 Fatal Error');
-                header('Content-Type:text/html');
-            }
-        }
-        ob_end_flush();
-        if($errno & (E_ERROR | E_USER_ERROR)) {
-            echo str_repeat('    ', 100)."\n"; // IE won't display error pages < 512b
-            exit(1);
-        }
-        return TRUE;
-    }
-    
-    /**
-     * @param Exception $e
-     * @return void
-     * @ignore
-     */
-    public function _exception_handler($e)
-    {
-        if (!headers_sent()) {
-            header('HTTP/1.0 500 Uncaught Exception');
-            header('Content-Type:text/html');
-        }
-
-        $line = $e->getFile();
-        if ($e->getLine()) {
-            $line .= ' line '.$e->getLine();
-        }
-
-        if (ini_get('display_errors')) {
-            $title = '500 ' . get_class($e);
-            $body = "<p><strong>\n ".htmlspecialchars($e->getMessage()).'</strong></p>' .
-                    '<p>In '.htmlspecialchars($line)."</p><pre>\n".htmlspecialchars($e->getTraceAsString()).'</pre>';
-        } else {
-            $title = "500 Uncaught Exception";
-            $body = "<p>The server encountered an uncaught exception and was unable to complete your request.</p>";
-        }
-
-        if (ini_get('log_errors')) {
-            error_log($e->getMessage().' in '.$line);
-        }
-        
-        if(ob_get_level() > 0 && ob_get_length() > 0) {
-            $curbuf = ob_get_contents();
-            ob_clean();
-        }
-        if(isset($curbuf) && preg_match('/<html/i', $curbuf)) {
-            echo $curbuf;
-            echo "<hr />";
-            echo "<h1>" . $title . "</h1>\n" . $body . '</body></html>';
-        }
-        else {
-            echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">' . "\n";
-            echo "<html><head>\n<title>".$title."</title>\n</head><body>\n";
-            if(isset($curbuf)) {
-                echo $curbuf;
-                echo "<hr />";
-            }
-            echo "<h1>" . $title . "</h1>\n" . $body . '</body></html>';
-        }
-        echo str_repeat('    ', 100)."\n"; // IE won't display error pages < 512b
-        exit(1);
-    }
-    
     /**
      * Runs a hook script.
      * @param string $script
      * @param string $subpath
      * @return bool
+     * @internal
      */
     private function _run_hook_if_exists($script, $subpath)
     {
@@ -1016,15 +891,19 @@ class Pinoco extends Pinoco_DynamicVars {
         // insert credit into X-Powered-By header
         $this->_credit_into_x_powerd_by();
         
+        // non-html but existing => raw binary with mime-type header
+        $realfile = $this->_basedir . $this->_path;
+        if(!$this->isRenderablePath($this->_path) && is_file($realfile)) {
+            header('Content-Type:' . $this->mimeType($realfile));
+            $st = stat($realfile);
+            header('Last-Modified:' . str_replace('+0000', 'GMT', gmdate("r", $st['mtime'])));
+            readfile($realfile);  // TODO: streaming
+            return;
+        }
+        
         self::$_current_instance = $this;
         
-        if(!(function_exists('xdebug_is_enabled') && xdebug_is_enabled())
-            && PHP_SAPI !== 'cli')
-        {
-            $special_error_handler_enabled = true;
-            set_error_handler(array($this, "_error_handler"));
-            set_exception_handler(array($this, "_exception_handler"));
-        }
+        //set_error_handler(array($this, "_exception_error_handler"));
         
         if($output_buffering) {
             ob_start();
@@ -1139,36 +1018,17 @@ class Pinoco extends Pinoco_DynamicVars {
             
             //render
             if(!$this->_manually_rendered && $this->_page) {
+                $page = $this->_page_from_path_with_directory_index(
+                    ($this->_page != "<default>") ? $this->resolvePath($this->_page) : $this->_path);
                 
-                if($this->_page != "<default>") {
-                    $pagepath = $this->resolvePath($this->_page);
-                    $page = $this->_page_from_path_with_directory_index($pagepath);
-                }
-                else {
-                    $pagepath = $this->_path;
-                    if($this->_page_modifier) {
-                        $this->updateIncdir();
-                        $pagepath = call_user_func($this->_page_modifier, $pagepath);
-                    }
-                    if($pagepath) {
-                        $page = $this->_page_from_path_with_directory_index($pagepath);
-                    }
-                    else {
-                        $page = FALSE;
-                    }
+                $this->updateIncdir();
+                
+                if($this->_page_modifier) {
+                    $page = call_user_func($this->_page_modifier, $page, $this->_path);
                 }
                 
                 if($page && is_file($this->_basedir . $page)) {
-                    // non-html but existing => raw binary with mime-type header
-                    if($this->isRenderablePath($this->_basedir . $page)) {
-                        $this->render($page);
-                    }
-                    else {
-                        header('Content-Type:' . $this->mimeType($this->_basedir . $page));
-                        //$st = stat($this->_basedir . $page);
-                        //header('Last-Modified:' . str_replace('+0000', 'GMT', gmdate("r", $st['mtime'])));
-                        readfile($this->_basedir . $page);  // TODO: streaming
-                    }
+                    $this->render($page);
                 }
                 else if(!$proccessed) {
                     // no page and no tarminal hook indicates resource was not found or forbidden
@@ -1209,10 +1069,8 @@ class Pinoco extends Pinoco_DynamicVars {
             ob_end_flush();
         }
         
-        if(isset($special_error_handler_enabled)) {
-            restore_exception_handler();
-            restore_error_handler();
-        }
+        //restore_error_handler();
+        
         self::$_current_instance = null;
     }
 }

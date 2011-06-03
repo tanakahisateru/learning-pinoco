@@ -9,8 +9,8 @@
  * @package  Pinoco
  * @author   Hisateru Tanaka <tanakahisateru@gmail.com>
  * @license  http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License
- * @version  0.4.0
- * @link     https://github.com/tanakahisateru/pinoco
+ * @version  0.3.0
+ * @link     http://code.google.com/p/pinoco/
  * @filesource
  */
 
@@ -54,9 +54,9 @@ class Pinoco_Vars implements IteratorAggregate, ArrayAccess {
     public static function wrap(&$srcref)
     {
         $self = new Pinoco_Vars();
-        $self->_vars = &$srcref;
+        $self->_vars = $srcref;
         return $self;
-    }
+    }    
     
     /**
      * Returns a value or default by name.
@@ -64,14 +64,10 @@ class Pinoco_Vars implements IteratorAggregate, ArrayAccess {
      * @param mixed $default
      * @return mixed
      */
-    public function get($name /*[, $default]*/)
+    public function get($name)
     {
         if(array_key_exists($name, $this->_vars)) {
-            $r = $this->_vars[$name];
-            if($r instanceof Pinoco_LazyValueProxy) {
-                $r = $r->fetch($this);
-            }
-            return $r;
+            return $this->_vars[$name];
         }
         else {
             return func_num_args() > 1 ? func_get_arg(1) : $this->_default_val;
@@ -112,32 +108,6 @@ class Pinoco_Vars implements IteratorAggregate, ArrayAccess {
     public function set($name, $value)
     {
         $this->_vars[$name] = $value;
-    }
-    
-    /**
-     * Sets a value to this object as given named dynamic value.
-     * The callback evaluted every time when fetched.
-     * @param string $name
-     * @param callable $callback
-     * @param array $context
-     * @return void
-     */
-    public function registerAsDynamic($name, $callback, $context=array())
-    {
-        $this->_vars[$name] = new Pinoco_LazyValueProxy($callback, false, $context);
-    }
-    
-    /**
-     * Sets a value to this object as given named lazy value.
-     * The callback evaluted as oneshot.
-     * @param string $name
-     * @param callable $callback
-     * @param array $context
-     * @return void
-     */
-    public function registerAsLazy($name, $callback, $context=array())
-    {
-        $this->_vars[$name] = new Pinoco_LazyValueProxy($callback, true, $context);
     }
     
     /**
@@ -222,29 +192,7 @@ class Pinoco_Vars implements IteratorAggregate, ArrayAccess {
         $arr = array();
         $ks = $filter ? $filter : $this->keys();
         foreach($ks as $k) {
-            $name = (strpos($modifier, "%") !== FALSE) ? sprintf($modifier, $k) : (
-                is_callable($modifier) ? call_user_func($modifier, $k) : ($modifier . $k)
-            );
-            $arr[$name] = $this->get($k, $default);
-        }
-        return $arr;
-    }
-    
-    /**
-     * Exports properties to Array recursively.
-     * @param int $depth
-     * @return array
-     */
-    public function toArrayRecurse($depth=false)
-    {
-        if($depth !== false && $depth == 0) { return $this; }
-        $arr = array();
-        foreach($this->keys() as $k) {
-            $v = $this->get($k);
-            if($v instanceof Pinoco_Vars || $v instanceof Pinoco_List) {
-                $v = $v->toArrayRecurse($depth !== false ? $depth - 1 : false);
-            }
-            $arr[$k] = $v;
+            $arr[sprintf($modifier, $k)] = $this->get($k, $default);
         }
         return $arr;
     }
@@ -277,7 +225,7 @@ class Pinoco_Vars implements IteratorAggregate, ArrayAccess {
         }
         $ks = $filter ? $filter : array_keys($srcarr);
         foreach($ks as $k) {
-            $name = (strpos($modifier, "%") !== FALSE) ? sprintf($modifier, $k) : (
+            $name = (strpos($modifier, "%") != -1) ? sprintf($modifier, $k) : (
                 is_callable($modifier) ? call_user_func($modifier, $k) : ($modifier . $k)
             );
             $this->set($name, array_key_exists($k, $srcarr) ? $srcarr[$k] : $default);
@@ -286,68 +234,6 @@ class Pinoco_Vars implements IteratorAggregate, ArrayAccess {
     
     public function __toString() { return __CLASS__; } // TODO: dump vars name/values
 }
-
-/**
- * Lazy value proxy
- * @package Pinoco
- * @internal
- */
-class Pinoco_LazyValueProxy {
-    
-    private $callback;
-    private $context;
-    private $oneshot;
-    private $freeze;
-    private $value;
-    
-    /**
-     * Constructor to make an lazy value proxy.
-     *
-     * @param callable $callback
-     * @param boolean $oneshot
-     * @param array $context
-     */
-    public function __construct($callback, $oneshot=false, $context=array())
-    {
-        if(is_callable($callback)) {
-            $this->callback = $callback;
-            $this->oneshot = $oneshot;
-            $this->context = !empty($context) ? $context : array();
-            $this->freeze = false;
-            $this->value = null;
-        }
-        else {
-            $this->freeze = true;
-            $this->value = $callback;
-        }
-    }
-    
-    /**
-     * Evalute real value.
-     *
-     * @param mixed $ovner
-     * @return mixed
-     */
-    public function fetch($owner=null)
-    {
-        if($this->oneshot && $this->freeze) {
-            return $this->value;
-        }
-        $args = $this->context;
-        array_unshift($args, $owner);
-        $result = call_user_func_array($this->callback, $args);
-        if($result instanceof Pinoco_LazyValueProxy) {
-            $result = $result->fetch($owner);
-        }
-        if($this->oneshot) {
-            $this->freeze = true;
-            $this->value = $result;
-        }
-        return $result;
-    }
-    
-}
-
 
 /**
  * List model
@@ -387,7 +273,7 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
     public static function wrap(&$srcref)
     {
         $self = new Pinoco_List();
-        $self->_arr = &$srcref;
+        $self->_arr = $srcref;
         return $self;
     }
     
@@ -396,7 +282,7 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param mixed $value,...
      * @return void
      */
-    public function push($value /*[, $value1[, ...]]*/)
+    public function push($value)
     {
         $n = func_num_args();
         for($i = 0; $i < $n; $i++) {
@@ -419,7 +305,7 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param mixed $value,...
      * @return void
      */
-    public function unshift($value /*[, $value1[, ...]]*/)
+    public function unshift($value)
     {
         $n = func_num_args();
         for($i = 0; $i < $n; $i++) {
@@ -442,7 +328,7 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param mixed $source
      * @return void
      */
-    public function concat($source /*[, $source1[, ...]]*/)
+    public function concat($source)
     {
         $n = func_num_args();
         for($i = 0; $i < $n; $i++) {
@@ -502,7 +388,7 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param int $length
      * @return Pinoco_List
      */
-    public function slice($offset /*[, $length]*/) {
+    public function slice($offset) { // $length
         if(func_num_args() >= 2) {
             $a1 = func_get_arg(1);
             return self::fromArray(array_slice($this->_arr, $offset, $a1));
@@ -519,7 +405,7 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param array $replacement
      * @return Pinoco_List;
      */
-    public function splice($offset, $length /*[, $replacement]*/) { // $replacement
+    public function splice($offset, $length=0) { // $replacement
         if(func_num_args() >= 3) {
             $a2 = func_get_arg(2);
             return self::fromArray(array_splice($this->_arr, $offset, $length, $a2));
@@ -535,7 +421,7 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param mixed $value
      * @return void
      */
-    public function insert($offset, $value /*[, $value1[, ...]]*/)
+    public function insert($offset, $value)
     {
         $args = func_get_args();
         array_shift($args);
@@ -570,9 +456,9 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param mixed $default
      * @return unknown_type
      */
-    public function get($idx /*[, $default]*/)
+    public function get($idx)
     {
-        if(isset($this->_arr[$idx])) {
+        if($idx < $this->count()) {
             return $this->_arr[$idx];
         }
         else {
@@ -587,10 +473,10 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
      * @param mixed $default
      * @return void
      */
-    public function set($idx, $value /*[, $default]*/)
+    public function set($idx, $value)
     {
         for($i = count($this->_arr); $i < $idx; $i++) {
-            $this->_arr[$i] = func_num_args() > 2 ? func_get_arg(2) : $this->_default_val; //default??
+            $this->_arr[$idx] = func_num_args() > 2 ? func_get_arg(2) : $this->_default_val; //default??
         }
         $this->_arr[$idx] = $value;
     }
@@ -613,36 +499,8 @@ class Pinoco_List implements IteratorAggregate, ArrayAccess, Countable {
     public function toArray($modifier=null)
     {
         $arr = array();
-        if($modifier) {
-            foreach($this->_arr as $i=>$v) {
-                $name = (strpos($modifier, "%") !== FALSE) ? sprintf($modifier, $i) : (
-                    is_callable($modifier) ? call_user_func($modifier, $i) : ($modifier . $i)
-                );
-                $arr[$name] = $v;
-            }
-        }
-        else {
-            foreach($this->_arr as $i=>$v) {
-                $arr[$i] = $v;
-            }
-        }
-        return $arr;
-    }
-    
-    /**
-     * Exports properties to Array recursively.
-     * @param int $depth
-     * @return array
-     */
-    public function toArrayRecurse($depth=false)
-    {
-        if($depth !== false && $depth == 0) { return $this; }
-        $arr = array();
         foreach($this->_arr as $i=>$v) {
-            if($v instanceof Pinoco_Vars || $v instanceof Pinoco_List) {
-                $v = $v->toArrayRecurse($depth !== false ? $depth - 1 : false);
-            }
-            $arr[$i] = $v;
+            $arr[$modifier ? sprintf($modifier, $i) : $i] = $v;
         }
         return $arr;
     }
@@ -740,9 +598,6 @@ class Pinoco_Iterator implements Iterator {
 }
 
 /**
- * Dynamic vars model base
- * @package Pinoco
- * @abstract
  */
 class Pinoco_DynamicVars extends Pinoco_Vars {
     
@@ -753,7 +608,7 @@ class Pinoco_DynamicVars extends Pinoco_Vars {
      * @return mixed
      * @see src/Pinoco/Pinoco_Vars#get($name)
      */
-    public function get($name /*[, $default]*/)
+    public function get($name)
     {
         if(method_exists($this, 'get_' . $name)) {
             return call_user_func(array($this, 'get_' . $name));
@@ -827,5 +682,20 @@ class Pinoco_DynamicVars extends Pinoco_Vars {
         $arr = $this->toArray();
         return new Pinoco_Iterator($arr);
     }
+    
+    public function _x_call($name, $args) // diabled temporaly
+    {
+        if(!$this->has($name)) {
+            return;
+            // throw new BadMethodCallException();
+        }
+        $func = $this->get($name);
+        if(!is_callable($func)) {
+            return;
+            // throw new BadMethodCallException();
+        }
+        
+        array_unshift($args, $this);
+        return call_user_func_array($func, $args);
+    }
 }
-
